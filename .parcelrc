@@ -1,0 +1,6 @@
+{
+  "extends": "@parcel/config-default",
+  "transformers": {
+    "*.ruby": ["@parcel/transformer-inline-string"]
+  }
+}
