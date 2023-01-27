@@ -18,10 +18,23 @@ self.MonacoEnvironment = {
   },
 };
 
+
+const get_init_code = () => {
+  const fragment = window.location.hash;
+  let code = 'puts "Hello"\nputs "Good-bye"';
+  if (fragment.length >= 2) {
+    const data = fragment.substring(1);
+    const params = new URLSearchParams(data);
+    const c = params.get("c");
+    if (c) code = c;
+  }
+  return code;
+}
+
 const editor = monaco.editor.create(
   document.getElementById('editor-container'),
   {
-    value: 'puts "Hello"\nputs "Good-bye"',
+    value: get_init_code(),
     language: 'ruby',
     automaticLayout: true,
     autoIndent: true,
@@ -32,7 +45,13 @@ const editor = monaco.editor.create(
 );
 
 window.update_code = () => {
-  if (typeof update !== "undefined") update(editor.getValue());
+  const code = editor.getValue();
+
+  if (typeof update !== "undefined") update(code);
+
+  const params = new URLSearchParams();
+  params.append("c", code);
+  window.location.hash = params.toString();
 };
 
 window.update_code();
