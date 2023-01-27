@@ -1,0 +1,26 @@
+* { padding: 0; margin: 0; }
+html {
+  overflow: hidden;
+}
+div.container {
+  display: flex;
+  height: 100vh;
+}
+div.content {
+  flex: 1 1 50%;
+  margin: 20px;
+  width: 50%;
+}
+div#editor-container {
+  border: 1px solid #ccc;
+}
+div#tree {
+  overflow-y: scroll;
+}
+ul {
+  margin-left: 1em;
+  list-style-type: square;
+}
+li.changed {
+  background: #ffcccc;
+}

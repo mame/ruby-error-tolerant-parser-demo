@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>test</title>
+    <script src="../node_modules/ruby-head-wasm-wasi/dist/browser.script.iife.js"></script>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="content" id="editor-container"></div>
+      <div class="content" id="tree">Hello</div>
+    </div>
+    <script type="module" src="index.js"></script>
+    <script type="text/ruby">
+      require "js"
+      require "cgi"
+
+      def conv(node, prev_node)
+        case node.type
+        when :SCOPE
+          keys = %w"tbl args body"
+        when :ARGS
+          keys = %w[pre_num pre_init opt first_post post_num post_init rest kw kwrest block]
+        when :DEFN
+          keys = %w[mid body]
+        when :ARYPTN
+          keys = %w[const pre rest post]
+        when :HSHPTN
+          keys = %w[const kw kwrest]
+        else
+          keys = []
+        end
+
+        changed = !prev_node || node.type != prev_node.type
+
+        children = node.children
+        prev_children = prev_node && node.type == prev_node.type ? prev_node.children : []
+
+        s = (changed ? "<li class='changed'>" : "<li>")
+        s << "#{ node.type } @ "
+        s << "(#{ node.first_lineno },#{ node.first_column})-(#{ node.last_lineno },#{ node.last_column })"
+
+        unless children.empty?
+          s << "<ul>"
+          children.zip(prev_children, keys) do |subnode, prev_subnode, key|
+            if subnode.is_a?(RubyVM::AbstractSyntaxTree::Node)
+              s << conv(subnode, prev_subnode)
+            else
+              d = subnode.inspect
+              s << (d != prev_subnode.inspect ? "<li class='changed'>" : "<li>")
+              s << "#{ key }: " if key
+              s << CGI.escapeHTML(subnode.inspect)
+              s << "</li>"
+            end
+          end
+          s << "</ul>"
+        end
+        s << "</li>"
+      end
+
+      Tree = JS.global[:document].getElementById("tree")
+      prev_node = nil
+      update = -> code do
+        node = RubyVM::AbstractSyntaxTree.parse(code.to_s, error_tolerant: true)
+        Tree[:innerHTML] = "<ul>#{ conv(node, prev_node) }</ul>"
+        prev_node = node
+      end
+
+      JS.global[:update] = update
+      JS.global[:window].update_code
+    </script>
+  </body>
+</html>
